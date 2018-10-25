@@ -1,0 +1,45 @@
+<html>
+<head>
+  <script src="socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+</head>
+  <body>
+    <input type="file" id="imagefile"  onchange="uploadDocument()">
+
+   
+
+<script>
+function uploadDocument(){
+var socket = io.connect('http://localhost:3000')
+var x = document.getElementById("imagefile");
+  var file =x.files[0]
+  console.log('file is this',file)
+  var fileReader = new FileReader(),
+    slice = file.slice(0, 100000);
+console.log("limited byte>>>>>>",slice);
+fileReader.readAsArrayBuffer(slice);
+fileReader.onload = (evt) => {
+    var arrayBuffer = fileReader.result;
+    console.log(arrayBuffer)
+    socket.emit('uploadData', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: arrayBuffer
+    });
+}
+socket.on('getMoreData', (data) => {
+    var place = data.currentSlice * 100000,
+        slice = file.slice(place, place + Math.min(100000, file.size - place));
+    fileReader.readAsArrayBuffer(slice);
+});
+
+socket.on('completed',()=>{
+    alert("Upload completed");
+})
+}
+</script>
+    </body>
+
+
+</html>
